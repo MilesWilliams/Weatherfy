@@ -1,2 +1,4 @@
 data,json
 main2.py
+__pycache__
+__pycache__/*

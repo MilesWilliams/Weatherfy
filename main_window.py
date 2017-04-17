@@ -1,5 +1,5 @@
 import sys
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 import urllib3
 from urllib.parse import urlencode
 import json
@@ -12,53 +12,86 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setGeometry(1440, 0, 300, 621)
         self.setWindowTitle("Weatherfy")
         self.setCentralWidget(WeatherWidget(self))
+        self.setContentsMargins(0, 0, 0, 0)
         self.show()
 
 
 class WeatherWidget(QtWidgets.QWidget):
     def __init__(self, parent):
         super(WeatherWidget, self).__init__(parent)
-        url = requests.get("https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid= 1591691&format=json")
+        url = requests.get("https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid= 1591691 and u='c'&format=json")
         content = url.json()
-        with open('data.json', 'w') as outfile:
-            json.dump(content, outfile)
-
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         # print(content['query']['results']['channel']['item']['forecast'][0]['date'])
-
-        main_frame = QtWidgets.QFrame()
-        layout = QtWidgets.QVBoxLayout()
-        main_frame.resize(300, 321)
-        main_frame.setStyleSheet("background-color: rgb(200, 255, 255)")
-        layout.addWidget(main_frame)
-        self.setLayout(layout)
-
+        currentDay = content['query']['results']['channel']['item']['condition']
+        location = content['query']['results']['channel']['location']
         forecast = content['query']['results']['channel']['item']['forecast']
 
+        label = QtWidgets.QLabel(self)
+        label.setText(currentDay['temp'] + "˚c")
+
+        main_frame = QtWidgets.QListWidget()
+        main_frame.setObjectName("city")
+        main_frame.resize(300, 20)
+        todays_weather = QtWidgets.QListWidget()
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setSpacing(0)
+        layout.addWidget(todays_weather)
+        layout.addWidget(label)
+        layout.addWidget(main_frame)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
+        print(currentDay)
+
+        mainItem = QtWidgets.QListWidgetItem(location['city'])
+        todays_weather.addItem(mainItem)
+        todays_weather.setStyleSheet("background: rgba(0,48,88,0.65); max-width:300px; height: 50px;")
+
+        # todays_weather.resize(300, 250)
         for cast in forecast:
-            print(cast)
-            label = QtWidgets.QLabel(self)
-            label.setText(cast['date'])
-            layout.addWidget(label)
-            label.setStyleSheet("background-color: rgb(200, 255, 255)")
-        # self.setWindowState(QtCore.Qt.WindowMaximized)
+
+            item = QtWidgets.QListWidgetItem("  " + cast['date'] + "     |         H: " + cast['high'] + "˙c" + "  L: " + cast['low'] + "˙c")
+            item.setIcon(QtGui.QIcon('Icons/cloud.png'))
+
+            main_frame.addItem(item)
+
+            # layout.addWidget(main_frame)
+
+        self.setWindowState(QtCore.Qt.WindowMaximized)
         self.show()
 
-    def WeatherApi():
-        http = urllib3.PoolManager()
-        baseurl = "https://query.yahooapis.com/v1/public/yql?"
-        yql_query = "select * from weather.forecast where woeid= 1591691"
-        yql_url = baseurl + urlencode({'q': yql_query}) + "&format=json"
-        result = http.request('GET', yql_url)
-        data = json.loads(result.data.decode('utf-8'))
-        print(data)
-        print (data['query']['results'])
 
-        widget_frame = QtWidgets.QFrame()
-        layout = QtWidgets.QVBoxLayout()
-        widget_frame.resize(300, 300)
-        layout.addWidget(widget_frame)
+class TopWidget(QtWidgets.QWidget):
+    def __init__(self, parent):
+        super(TopWidget, self).__init__(parent)
+        url = requests.get("https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid= 1591691&format=json")
+        content = url.json()
+
+        # print(content['query']['results']['channel']['item']['forecast'][0]['date'])
+        currentDay = content['query']['results']['channel']['item']['condition']
+        location = content['query']['results']['channel']['location']
+        forecast = content['query']['results']['channel']['item']['forecast']
+
+        main_frame = QtWidgets.QListWidget()
+        todays_weather = QtWidgets.QListWidget()
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setSpacing(0)
+        layout.addWidget(todays_weather)
+        layout.addWidget(main_frame)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+
+        print(currentDay)
+
+        mainItem = QtWidgets.QListWidgetItem(location['city'] + " | " + currentDay['temp'])
+        todays_weather.addItem(mainItem)
+        todays_weather.setStyleSheet(":item{background: rgba(0,255,0,20%); max-width:300px; height: 150px;}")
+        todays_weather.setStyleSheet("background: rgba(0,255,0,20%); max-width:300px; height: 150px;")
+
+        # todays_weather.resize(300, 250)
+
         self.setWindowState(QtCore.Qt.WindowMaximized)
-        label = QtWidgets.QLabel(self)
-        label.setText("hi")
         self.show()

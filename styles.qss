@@ -1,4 +1,44 @@
+MainWindow {
+    margin: 0;
+    padding: 0;
+    background: rgba(0,48,88,1);
+    opacity: 0.65;
+}
 WeatherWidget {
-    opacity: 0.59;
-    background: rgba(0,48,88);
+    background: rgba(0,48,88,0.65);
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+QListWidget {
+    border: 0;
+    border: none;
+    height: 40px;
+    max-height: 40px;
+}
+QListWidget:item {
+    color: #fff;
+    padding: 15px;
+    background: rgba(0,48,88,1);
+    font-family: .SFNSDisplay;
+    font-size: 22px;
+    letter-spacing: 0;
+    }
+QLabel {
+    qproperty-alignment: AlignCenter;
+    font-size: 116px;
+    color: #fff;
+}
+#city:item {
+    border-top: 1px solid 979797;
+    property-alignment: AlignCenter;
+    qproperty-alignment: AlignCenter;
+}
+#city {
+    height: 300px;
+    max-height: 300px;
+}
+QIcon {
+    height:40px;
+    width: 40px;
 }
