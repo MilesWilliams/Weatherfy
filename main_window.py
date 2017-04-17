@@ -1,15 +1,15 @@
-import sys
+# import sys
 from PyQt5 import QtWidgets, QtCore, QtGui
-import urllib3
-from urllib.parse import urlencode
-import json
+# import urllib3
+# from urllib.parse import urlencode
+# import json
 import requests
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.setGeometry(1440, 0, 300, 621)
+        self.setGeometry(1120, 0, 300, 621)
         self.setWindowTitle("Weatherfy")
         self.setCentralWidget(WeatherWidget(self))
         self.setContentsMargins(0, 0, 0, 0)
@@ -21,20 +21,20 @@ class WeatherWidget(QtWidgets.QWidget):
         super(WeatherWidget, self).__init__(parent)
         url = requests.get("https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid= 1591691 and u='c'&format=json")
         content = url.json()
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         # print(content['query']['results']['channel']['item']['forecast'][0]['date'])
         currentDay = content['query']['results']['channel']['item']['condition']
         location = content['query']['results']['channel']['location']
         forecast = content['query']['results']['channel']['item']['forecast']
-
+        self.setGeometry(1440, 0, 300, 621)
         label = QtWidgets.QLabel(self)
         label.setText(currentDay['temp'] + "˚c")
 
         main_frame = QtWidgets.QListWidget()
         main_frame.setObjectName("city")
-        main_frame.resize(300, 20)
         todays_weather = QtWidgets.QListWidget()
         layout = QtWidgets.QVBoxLayout(self)
+
+        # layout.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
         layout.setSpacing(0)
         layout.addWidget(todays_weather)
         layout.addWidget(label)
@@ -46,6 +46,7 @@ class WeatherWidget(QtWidgets.QWidget):
         print(currentDay)
 
         mainItem = QtWidgets.QListWidgetItem(location['city'])
+
         todays_weather.addItem(mainItem)
         todays_weather.setStyleSheet("background: rgba(0,48,88,0.65); max-width:300px; height: 50px;")
 

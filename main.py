@@ -12,11 +12,13 @@ def run():
     # app.setStyleSheet("Window {background: rgba(0,255,0,20%)}")
     app.setStyleSheet(qss_file)
     main_window = MainWindow()
-    main_window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    # main_window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    main_window.setWindowFlags(QtCore.Qt.CustomizeWindowHint)
     # main_window.setAttribute(QtCore.Qt.WA_TranslucentBackground)
     main_window.setWindowOpacity(0.85)
     main_window.show()
 
     sys.exit(app.exec_())
+
 
 run()

@@ -2,3 +2,6 @@ data,json
 main2.py
 __pycache__
 __pycache__/*
+yahoo-api.py
+main_window3.py
+data.json
