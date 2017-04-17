@@ -1,0 +1,4 @@
+WeatherWidget {
+    opacity: 0.59;
+    background: rgba(0,48,88);
+}
