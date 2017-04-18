@@ -1,27 +1,56 @@
-# import sys
+import sys
+import math
 from PyQt5 import QtWidgets, QtCore, QtGui
-# import urllib3
-# from urllib.parse import urlencode
-# import json
 import requests
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.setGeometry(1120, 0, 300, 621)
+        self.setGeometry(1120, 20, 300, 621)
         self.setWindowTitle("Weatherfy")
         self.setCentralWidget(WeatherWidget(self))
         self.setContentsMargins(0, 0, 0, 0)
-        self.show()
+        settings = QtWidgets.QAction("Location", self)
+        extractAction = QtWidgets.QAction("Close Weatherly  ctr+Q", self)
+
+        extractAction.setShortcut("Ctrl+Q")
+        extractAction.setStatusTip("Quit")
+        menubar = self.menuBar()
+
+        file = menubar.addMenu("Weatherfy")
+        file.addAction(settings)
+        file.addAction(extractAction)
+
+        def menu(self):
+            extractAction = QtWidgets.QAction("&Quit", self)
+            extractAction.setShortcut("Ctrl+Q")
+            extractAction.triggered.connect(self.quitApplication)
+
+        def quitApplication(self):
+            print("Application Closed")
+            sys.exit()
 
 
 class WeatherWidget(QtWidgets.QWidget):
     def __init__(self, parent):
         super(WeatherWidget, self).__init__(parent)
-        url = requests.get("https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid= 1591691 and u='c'&format=json")
-        content = url.json()
-        # print(content['query']['results']['channel']['item']['forecast'][0]['date'])
+        self.setWindowState(QtCore.Qt.WindowMaximized)
+        self.startDownload()
+        spinner = Overlay()
+        spinner
+        self.show()
+
+    def startDownload(self):
+        url = "https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid= 1591691 and u='c'&format=json"
+        self.threads = []
+        download = YahooApi(url)
+        download.data_downloaded.connect(self.on_data_ready)
+        self.threads.append(download)
+        download.start()
+
+    def on_data_ready(self, data):
+        content = data
         currentDay = content['query']['results']['channel']['item']['condition']
         location = content['query']['results']['channel']['location']
         forecast = content['query']['results']['channel']['item']['forecast']
@@ -34,7 +63,6 @@ class WeatherWidget(QtWidgets.QWidget):
         todays_weather = QtWidgets.QListWidget()
         layout = QtWidgets.QVBoxLayout(self)
 
-        # layout.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
         layout.setSpacing(0)
         layout.addWidget(todays_weather)
         layout.addWidget(label)
@@ -50,7 +78,6 @@ class WeatherWidget(QtWidgets.QWidget):
         todays_weather.addItem(mainItem)
         todays_weather.setStyleSheet("background: rgba(0,48,88,0.65); max-width:300px; height: 50px;")
 
-        # todays_weather.resize(300, 250)
         for cast in forecast:
 
             item = QtWidgets.QListWidgetItem("  " + cast['date'] + "     |         H: " + cast['high'] + "˙c" + "  L: " + cast['low'] + "˙c")
@@ -58,41 +85,59 @@ class WeatherWidget(QtWidgets.QWidget):
 
             main_frame.addItem(item)
 
-            # layout.addWidget(main_frame)
 
-        self.setWindowState(QtCore.Qt.WindowMaximized)
-        self.show()
+class YahooApi(QtCore.QThread):
+    data_downloaded = QtCore.pyqtSignal(object)
+
+    def __init__(self, url):
+        QtCore.QThread.__init__(self)
+        self.url = url
+
+    def run(self):
+        info = requests.get(self.url)
+        content = info.json()
+        print(content)
+        self.data_downloaded.emit(content)
 
 
-class TopWidget(QtWidgets.QWidget):
-    def __init__(self, parent):
-        super(TopWidget, self).__init__(parent)
-        url = requests.get("https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid= 1591691&format=json")
-        content = url.json()
+class Overlay(QtWidgets.QWidget):
 
-        # print(content['query']['results']['channel']['item']['forecast'][0]['date'])
-        currentDay = content['query']['results']['channel']['item']['condition']
-        location = content['query']['results']['channel']['location']
-        forecast = content['query']['results']['channel']['item']['forecast']
+    def __init__(self, parent=None):
 
-        main_frame = QtWidgets.QListWidget()
-        todays_weather = QtWidgets.QListWidget()
-        layout = QtWidgets.QVBoxLayout(self)
-        layout.setSpacing(0)
-        layout.addWidget(todays_weather)
-        layout.addWidget(main_frame)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
+        QtWidgets.QWidget.__init__(self, parent)
+        palette = QtGui .QPalette(self.palette())
+        palette.setColor(palette.Background, QtCore.Qt.transparent)
+        self.setPalette(palette)
 
-        print(currentDay)
+    def paintEvent(self, event):
 
-        mainItem = QtWidgets.QListWidgetItem(location['city'] + " | " + currentDay['temp'])
-        todays_weather.addItem(mainItem)
-        todays_weather.setStyleSheet(":item{background: rgba(0,255,0,20%); max-width:300px; height: 150px;}")
-        todays_weather.setStyleSheet("background: rgba(0,255,0,20%); max-width:300px; height: 150px;")
+        painter = QtGui.QPainter()
+        painter.begin(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        painter.fillRect(event.rect(), QBrush(QColor(255, 255, 255, 127)))
+        painter.setPen(QPen(Qt.NoPen))
 
-        # todays_weather.resize(300, 250)
+        for i in range(6):
+            if (self.counter / 5) % 6 == i:
+                painter.setBrush(QBrush(QColor(127 + (self.counter % 5) * 32, 127, 127)))
+            else:
+                painter.setBrush(QBrush(QColor(127, 127, 127)))
+            painter.drawEllipse(
+                self.width() / 2 + 30 * math.cos(2 * math.pi * i / 6.0) - 10,
+                self.height() / 2 + 30 * math.sin(2 * math.pi * i / 6.0) - 10,
+                20, 20)
 
-        self.setWindowState(QtCore.Qt.WindowMaximized)
-        self.show()
+        painter.end()
+
+    def showEvent(self, event):
+
+        self.timer = self.startTimer(50)
+        self.counter = 0
+
+    def timerEvent(self, event):
+
+        self.counter += 1
+        self.update()
+        if self.counter == 60:
+            self.killTimer(self.timer)
+            self.hide()
